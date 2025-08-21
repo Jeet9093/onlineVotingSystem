@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'VoteChain UI',
+  title: 'Virtual Polling',
   description: 'Tamper-evident demo voting system',
 };
 

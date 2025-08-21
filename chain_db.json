@@ -1,0 +1,21 @@
+{
+  "users": {
+    "fbbf4eb7-a0aa-433b-88b8-4c2512d48b44": {
+      "user_id": "fbbf4eb7-a0aa-433b-88b8-4c2512d48b44",
+      "name": "Admin",
+      "role": "admin",
+      "voted": {}
+    }
+  },
+  "elections": {},
+  "chain": [
+    {
+      "index": 0,
+      "timestamp": 1755781020,
+      "vote_hash": "GENESIS",
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 169014
+    }
+  ],
+  "payloads": []
+}

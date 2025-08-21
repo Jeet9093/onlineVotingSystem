@@ -13,7 +13,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="p-4 md:p-6 text-center">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">VoteChain</h1>
+        <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">Virtual Polling</h1>
         <p className="text-muted-foreground mt-2 text-lg">A tamper-evident demo voting system built on a simple blockchain.</p>
       </header>
 
