@@ -215,12 +215,17 @@ export async function closeElection(electionId: string): Promise<{ election_id: 
   return { election_id: electionId, active: false };
 }
 
-export async function addVoter(name: string): Promise<{ voter_id: string; name: string }> {
+export async function addVoter(name: string, photoDataUri: string): Promise<{ voter_id: string; name: string }> {
   const store = await Store.load();
   const vid = crypto.randomUUID();
-  store.users[vid] = { user_id: vid, name, role: 'voter', voted: {} };
+  store.users[vid] = { user_id: vid, name, role: 'voter', voted: {}, photoDataUri };
   await Store.save(store);
   return { voter_id: vid, name };
+}
+
+export async function getAllVoters(): Promise<User[]> {
+    const store = await Store.load();
+    return Object.values(store.users).filter(u => u.role === 'voter');
 }
 
 function getCandidate(store: Store, electionId: string, candidateId: string): Candidate | undefined {

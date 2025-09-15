@@ -10,9 +10,11 @@ import {
   verifyChain as coreVerifyChain,
   getAdminUser,
   getElectionCreatorPhoto,
+  getAllVoters,
   TallyResult
 } from '@/lib/voting-core';
 import { verifyAdmin } from '@/ai/flows/verify-admin-flow';
+import { identifyVoter } from '@/ai/flows/identify-voter-flow';
 
 type FormState = {
   message?: string;
@@ -68,12 +70,17 @@ export async function createElection(prevState: FormState, formData: FormData): 
 
 export async function addVoter(prevState: FormState, formData: FormData): Promise<FormState> {
   const name = formData.get('name') as string;
+  const photoDataUri = formData.get('photoDataUri') as string;
+
   if (!name) {
     return { error: 'Voter name is required.' };
   }
+  if (!photoDataUri) {
+    return { error: 'Voter photo is required.' };
+  }
 
   try {
-    const result = await coreAddVoter(name);
+    const result = await coreAddVoter(name, photoDataUri);
     return {
       message: `Voter Added:\nName: ${result.name}\nID: ${result.voter_id}`
     };
@@ -82,20 +89,51 @@ export async function addVoter(prevState: FormState, formData: FormData): Promis
   }
 }
 
+async function getVoterIdFromPhoto(photoDataUri: string): Promise<string> {
+    const voters = await getAllVoters();
+    const registeredVoters = voters.map(v => ({ user_id: v.user_id, photoDataUri: v.photoDataUri! })).filter(v => v.photoDataUri);
+
+    if (registeredVoters.length === 0) {
+        throw new Error("No voters with photos registered. Cannot perform face identification.");
+    }
+    
+    const identification = await identifyVoter({
+        livePhotoDataUri: photoDataUri,
+        registeredVoters: registeredVoters,
+    });
+
+    if (!identification.matchFound || !identification.voterId) {
+        throw new Error(`Could not identify voter: ${identification.reason}`);
+    }
+
+    return identification.voterId;
+}
+
+
 export async function castVote(prevState: FormState, formData: FormData): Promise<FormState> {
-  const voterId = formData.get('voterId') as string;
+  const photoDataUri = formData.get('photoDataUri') as string;
   const electionId = formData.get('electionId') as string;
   const candidateId = formData.get('candidateId') as string;
 
-  if (!voterId || !electionId || !candidateId) {
-    return { error: 'Voter ID, Election ID, and Candidate ID are required.' };
+  if (!photoDataUri) {
+    return { error: 'Face identification is required.' };
+  }
+  if (!electionId || !candidateId) {
+    return { error: 'Election ID and Candidate ID are required.' };
+  }
+  
+  let voterId: string;
+  try {
+      voterId = await getVoterIdFromPhoto(photoDataUri);
+  } catch(e) {
+      return { error: (e as Error).message };
   }
 
   try {
     const result = await coreCastVote(voterId, electionId, candidateId);
     revalidatePath('/');
     return {
-      message: `Vote Recorded!\nBlock Index: #${result.block_index}\nVote Hash: ${result.vote_hash}\nBlock Hash: ${result.block_hash}`
+      message: `Vote Recorded!\nVoter ID: ${voterId}\nBlock Index: #${result.block_index}\nVote Hash: ${result.vote_hash}\nBlock Hash: ${result.block_hash}`
     };
   } catch (e) {
     return { error: (e as Error).message };

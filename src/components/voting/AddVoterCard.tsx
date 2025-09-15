@@ -1,18 +1,78 @@
 "use client";
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { addVoter } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Camera, Loader2, UserCheck } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '../ui/button';
 
 const initialState = {};
 
 export function AddVoterCard() {
   const [state, formAction] = useActionState(addVoter, initialState);
+  const { toast } = useToast();
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [photoDataUri, setPhotoDataUri] = useState<string>('');
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isCaptured, setIsCaptured] = useState(false);
+  
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to use this app.',
+        });
+      }
+    };
+
+    getCameraPermission();
+
+    return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+        }
+    }
+  }, [toast]);
+  
+  const handleCapture = async () => {
+    if (!videoRef.current) return;
+    setIsCapturing(true);
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext('2d');
+    context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const dataUri = canvas.toDataURL('image/jpeg');
+    setPhotoDataUri(dataUri);
+    // Simulate verification
+    setTimeout(() => {
+        setIsCapturing(false);
+        setIsCaptured(true);
+        toast({
+            title: "Photo Captured!",
+            description: "You can now add the voter."
+        })
+    }, 500)
+  };
 
   return (
     <Card>
@@ -23,15 +83,35 @@ export function AddVoterCard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction}>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Voter Name</Label>
-              <Input id="name" name="name" placeholder="e.g., John Doe" required />
-            </div>
-            <FormSubmitButton>Add Voter</FormSubmitButton>
-            <FormStatus state={state} />
+        <form action={formAction} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Voter Name</Label>
+            <Input id="name" name="name" placeholder="e.g., John Doe" required />
           </div>
+
+          <div className="space-y-2">
+            <Label>Voter Photo</Label>
+            <div className="p-4 border rounded-md bg-background/30 space-y-4">
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-black" autoPlay muted playsInline />
+                {hasCameraPermission === false && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertDescription>
+                            Please allow camera access to use this feature.
+                        </AlertDescription>
+                    </Alert>
+                )}
+                 <Button type="button" onClick={handleCapture} disabled={hasCameraPermission !== true || isCapturing || isCaptured} className="w-full">
+                    {isCapturing ? <Loader2 className="animate-spin mr-2" /> : isCaptured ? <UserCheck className="mr-2" /> : <Camera className="mr-2" />}
+                    {isCaptured ? 'Captured' : isCapturing ? 'Capturing...' : 'Capture Photo'}
+                </Button>
+            </div>
+          </div>
+          
+          <input type="hidden" name="photoDataUri" value={photoDataUri} />
+
+          <FormSubmitButton disabled={!isCaptured}>Add Voter</FormSubmitButton>
+          <FormStatus state={state} />
         </form>
       </CardContent>
     </Card>
