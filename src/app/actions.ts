@@ -8,6 +8,8 @@ import {
   closeElection as coreCloseElection,
   tally as coreTally,
   verifyChain as coreVerifyChain,
+  getAdminUser,
+  getElectionCreatorPhoto,
   TallyResult
 } from '@/lib/voting-core';
 import { verifyAdmin } from '@/ai/flows/verify-admin-flow';
@@ -30,8 +32,16 @@ export async function createElection(prevState: FormState, formData: FormData): 
     return { error: 'Face verification is required.' };
   }
 
+  const admin = await getAdminUser();
+  if (!admin.photoDataUri) {
+      return { error: 'Admin user does not have a reference photo. Cannot verify.' };
+  }
+
   try {
-    const verification = await verifyAdmin({ photoDataUri });
+    const verification = await verifyAdmin({
+      referencePhotoDataUri: admin.photoDataUri,
+      livePhotoDataUri: photoDataUri,
+    });
     if (!verification.isAuthorized) {
         return { error: `Face verification failed: ${verification.reason}` };
     }
@@ -46,7 +56,7 @@ export async function createElection(prevState: FormState, formData: FormData): 
   }
 
   try {
-    const result = await coreCreateElection(title, candidates);
+    const result = await coreCreateElection(title, candidates, admin.user_id, photoDataUri);
     revalidatePath('/');
     return {
       message: `Election Created:\nTitle: ${result.title}\nID: ${result.election_id}\n\nCandidates:\n${result.candidates.map(c => `- ${c.name}: ${c.id}`).join('\n')}`
@@ -103,9 +113,17 @@ export async function closeElection(prevState: FormState, formData: FormData): P
   if (!photoDataUri) {
     return { error: 'Face verification is required.' };
   }
+  
+  const referencePhotoDataUri = await getElectionCreatorPhoto(electionId);
+  if (!referencePhotoDataUri) {
+      return { error: 'Could not find the reference photo for the election creator.' };
+  }
 
   try {
-    const verification = await verifyAdmin({ photoDataUri });
+    const verification = await verifyAdmin({
+      referencePhotoDataUri,
+      livePhotoDataUri: photoDataUri,
+    });
     if (!verification.isAuthorized) {
         return { error: `Face verification failed: ${verification.reason}` };
     }

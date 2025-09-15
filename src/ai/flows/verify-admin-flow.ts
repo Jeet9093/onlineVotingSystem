@@ -9,20 +9,24 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getAdminUser } from '@/lib/voting-core';
-import { SHA256 } from 'crypto-js';
+import { getAdminUser, type User } from '@/lib/voting-core';
 
 const VerifyAdminInputSchema = z.object({
-  photoDataUri: z
+  referencePhotoDataUri: z
     .string()
     .describe(
-      "A photo of a person, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A reference photo of the authorized person, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
+  livePhotoDataUri: z
+    .string()
+    .describe(
+      "A live photo of the person to verify, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type VerifyAdminInput = z.infer<typeof VerifyAdminInputSchema>;
 
 const VerifyAdminOutputSchema = z.object({
-  isAuthorized: z.boolean().describe('Whether the person in the photo is the authorized administrator.'),
+  isAuthorized: z.boolean().describe('Whether the person in the live photo is the same as the person in the reference photo.'),
   reason: z.string().describe('The reason for the authorization decision.'),
 });
 export type VerifyAdminOutput = z.infer<typeof VerifyAdminOutputSchema>;
@@ -39,26 +43,25 @@ const verifyAdminFlow = ai.defineFlow(
     outputSchema: VerifyAdminOutputSchema,
   },
   async (input) => {
-    const admin = await getAdminUser();
-    // We hash the admin name to avoid sending PII to the model.
-    const adminIdHash = SHA256(admin.name).toString();
-
+    
     const prompt = ai.definePrompt({
         name: 'verifyAdminPrompt',
         input: { schema: VerifyAdminInputSchema },
         output: { schema: VerifyAdminOutputSchema },
-        prompt: `You are a security expert responsible for verifying user identities.
+        prompt: `You are a security expert responsible for verifying user identities by comparing two photos.
     
-        Your task is to determine if the provided photo is of the authorized system administrator.
-        The administrator is identified by a unique hash.
+        Your task is to determine if the person in the live photo is the same as the person in the reference photo.
     
-        - First, confirm the image contains a clear, live photo of a single adult human face. Reject any images that are drawings, avatars, contain multiple people, no people, or are not live photos (e.g., a photo of a photo).
-        - Second, if the image is valid, confirm that the person in the photo is the administrator associated with the hash: ${adminIdHash}.
+        - First, confirm both images contain a clear, live photo of a single adult human face. Reject any images that are drawings, avatars, contain multiple people, no people, or are not live photos (e.g., a photo of a photo).
+        - Second, if both images are valid, perform a face match comparison.
     
-        Return your decision in the specified JSON format. If you reject the image, provide a clear reason.
+        Return your decision in the specified JSON format. If you reject the images or if they don't match, provide a clear reason.
     
-        Photo to verify:
-        {{media url=photoDataUri}}`,
+        Reference Photo:
+        {{media url=referencePhotoDataUri}}
+
+        Live Photo to verify:
+        {{media url=livePhotoDataUri}}`,
     });
 
     const { output } = await prompt(input);

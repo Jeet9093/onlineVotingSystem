@@ -103,8 +103,8 @@ export class Blockchain {
 }
 
 export type Candidate = { id: string; name: string };
-export type Election = { election_id: string; title: string; candidates: Candidate[]; active: boolean };
-export type User = { user_id: string; name: string; role: 'admin' | 'voter'; voted: Record<string, boolean> };
+export type Election = { election_id: string; title: string; candidates: Candidate[]; active: boolean; creatorId: string; };
+export type User = { user_id: string; name: string; role: 'admin' | 'voter'; voted: Record<string, boolean>; photoDataUri?: string; };
 export type VotePayload = { election_id: string; candidate_id: string; salt: string };
 
 type StoreData = {
@@ -159,7 +159,15 @@ class Store {
       s.ledger.genesis();
       
       const admin_id = crypto.randomUUID();
-      s.users[admin_id] = { user_id: admin_id, name: 'Admin', role: 'admin', voted: {} };
+      s.users[admin_id] = { 
+        user_id: admin_id, 
+        name: 'Admin', 
+        role: 'admin', 
+        voted: {},
+        // This is a placeholder reference photo for the admin.
+        // In a real application, this would be collected during a secure enrollment process.
+        photoDataUri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+      };
       
       await Store.save(s);
       return s;
@@ -170,15 +178,23 @@ class Store {
 
 // --- Core Functions ---
 
-export async function createElection(title: string, candidateNames: string[]): Promise<Election> {
+export async function createElection(title: string, candidateNames: string[], creatorId: string, creatorPhotoDataUri: string): Promise<Election> {
   const store = await Store.load();
+  if(!store.users[creatorId] || store.users[creatorId].role !== 'admin') {
+    throw new Error("Creator must be an admin.");
+  }
+
+  // Update the admin's reference photo with the one just taken.
+  store.users[creatorId].photoDataUri = creatorPhotoDataUri;
+
   const eid = crypto.randomUUID();
   const candidates = candidateNames.map(name => ({ id: crypto.randomUUID(), name }));
   
-  store.elections[eid] = { title, candidates, active: true };
+  const electionData = { title, candidates, active: true, creatorId };
+  store.elections[eid] = electionData;
   await Store.save(store);
   
-  return { election_id: eid, title, candidates, active: true };
+  return { election_id: eid, ...electionData };
 }
 
 export async function listElections(): Promise<Election[]> {
@@ -220,6 +236,16 @@ export async function getAdminUser(): Promise<User> {
         throw new Error("No admin user found");
     }
     return admin;
+}
+
+export async function getElectionCreatorPhoto(electionId: string): Promise<string | undefined> {
+    const store = await Store.load();
+    const election = store.elections[electionId];
+    if (!election) {
+        throw new Error("Election not found");
+    }
+    const creator = store.users[election.creatorId];
+    return creator?.photoDataUri;
 }
 
 

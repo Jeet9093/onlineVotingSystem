@@ -63,15 +63,13 @@ export function CreateElectionCard() {
     context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const dataUri = canvas.toDataURL('image/jpeg');
     setPhotoDataUri(dataUri);
-    // Simulate verification
-    setTimeout(() => {
-        setIsVerifying(false);
-        setIsVerified(true);
-        toast({
-            title: "Identity Verified!",
-            description: "You can now create the election."
-        })
-    }, 1000)
+    // This is a client-side simulation. The real verification happens on the server.
+    setIsVerifying(false);
+    setIsVerified(true);
+    toast({
+        title: "Identity Captured!",
+        description: "Your photo has been taken. The server will verify it when you create the election."
+    })
   };
 
   return (
@@ -98,7 +96,7 @@ export function CreateElectionCard() {
                     )}
                      <Button onClick={handleVerify} disabled={hasCameraPermission !== true || isVerifying || isVerified} className="w-full">
                         {isVerifying ? <Loader2 className="animate-spin mr-2" /> : isVerified ? <UserCheck className="mr-2" /> : <Camera className="mr-2" />}
-                        {isVerified ? 'Verified' : isVerifying ? 'Verifying...' : 'Verify Identity'}
+                        {isVerified ? 'Photo Captured' : isVerifying ? 'Capturing...' : 'Capture Identity Photo'}
                     </Button>
                 </div>
             </div>
