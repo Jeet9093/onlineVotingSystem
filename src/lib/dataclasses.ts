@@ -4,7 +4,7 @@ export function dataclass<T extends object>() {
 
     constructor(data: T) {
       Object.assign(this, data);
-      Object.freeze(this);
+      // Object.freeze(this); // Temporarily commented out to allow mutability
     }
 
     copy(update: Partial<T>): this {

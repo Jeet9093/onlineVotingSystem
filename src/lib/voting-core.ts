@@ -137,7 +137,8 @@ class Store {
     const s = new Store();
     s.users = obj.users || {};
     s.elections = obj.elections || {};
-    s.ledger.chain = (obj.chain || []).map(b => new Block(b));
+    const chain = (obj.chain || []).map(b => new Block(b));
+    s.ledger = new Blockchain({ chain });
     s.payloads = obj.payloads || [];
     return s;
   }
@@ -210,6 +211,15 @@ function getCandidate(store: Store, electionId: string, candidateId: string): Ca
     const election = store.elections[electionId];
     if (!election) return undefined;
     return election.candidates.find(c => c.id === candidateId);
+}
+
+export async function getAdminUser(): Promise<User> {
+    const store = await Store.load();
+    const admin = Object.values(store.users).find(u => u.role === 'admin');
+    if (!admin) {
+        throw new Error("No admin user found");
+    }
+    return admin;
 }
 
 

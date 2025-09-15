@@ -10,6 +10,7 @@ import {
   verifyChain as coreVerifyChain,
   TallyResult
 } from '@/lib/voting-core';
+import { verifyAdmin } from '@/ai/flows/verify-admin-flow';
 
 type FormState = {
   message?: string;
@@ -20,10 +21,25 @@ type FormState = {
 export async function createElection(prevState: FormState, formData: FormData): Promise<FormState> {
   const title = formData.get('title') as string;
   const candidatesStr = formData.get('candidates') as string;
+  const photoDataUri = formData.get('photoDataUri') as string;
 
   if (!title || !candidatesStr) {
     return { error: 'Title and candidates are required.' };
   }
+  if (!photoDataUri) {
+    return { error: 'Face verification is required.' };
+  }
+
+  try {
+    const verification = await verifyAdmin({ photoDataUri });
+    if (!verification.isAuthorized) {
+        return { error: `Face verification failed: ${verification.reason}` };
+    }
+  } catch(e) {
+    return { error: `Face verification failed: ${(e as Error).message}` };
+  }
+
+
   const candidates = candidatesStr.split(',').map(s => s.trim()).filter(Boolean);
   if (candidates.length < 2) {
     return { error: 'Please provide at least two candidates.' };
@@ -78,9 +94,25 @@ export async function castVote(prevState: FormState, formData: FormData): Promis
 
 export async function closeElection(prevState: FormState, formData: FormData): Promise<FormState> {
   const electionId = formData.get('electionId') as string;
+  const photoDataUri = formData.get('photoDataUri') as string;
+
   if (!electionId) {
     return { error: 'Election ID is required.' };
   }
+
+  if (!photoDataUri) {
+    return { error: 'Face verification is required.' };
+  }
+
+  try {
+    const verification = await verifyAdmin({ photoDataUri });
+    if (!verification.isAuthorized) {
+        return { error: `Face verification failed: ${verification.reason}` };
+    }
+  } catch(e) {
+    return { error: `Face verification failed: ${(e as Error).message}` };
+  }
+
 
   try {
     const result = await coreCloseElection(electionId);
