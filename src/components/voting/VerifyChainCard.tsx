@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { verifyChain } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
@@ -10,7 +10,7 @@ import { ShieldCheck } from 'lucide-react';
 const initialState = {};
 
 export function VerifyChainCard() {
-  const [state, formAction] = useFormState(verifyChain, initialState);
+  const [state, formAction] = useActionState(verifyChain, initialState);
 
   return (
     <Card>

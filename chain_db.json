@@ -7,7 +7,26 @@
       "voted": {}
     }
   },
-  "elections": {},
+  "elections": {
+    "cc196231-d504-450a-9441-567e3ae59f90": {
+      "title": "CR",
+      "candidates": [
+        {
+          "id": "c3f3ad00-f2f4-4fac-b72c-b665a8efb135",
+          "name": "A"
+        },
+        {
+          "id": "62696d59-686c-4671-8a98-6015c51b31ab",
+          "name": "B"
+        },
+        {
+          "id": "cd85c62b-45a3-4e76-ac65-05cb7054d39c",
+          "name": "C"
+        }
+      ],
+      "active": true
+    }
+  },
   "chain": [
     {
       "index": 0,

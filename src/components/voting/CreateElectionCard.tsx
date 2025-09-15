@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { CirclePlus } from 'lucide-react';
 const initialState = {};
 
 export function CreateElectionCard() {
-  const [state, formAction] = useFormState(createElection, initialState);
+  const [state, formAction] = useActionState(createElection, initialState);
 
   return (
     <Card>

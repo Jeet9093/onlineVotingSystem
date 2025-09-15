@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { BarChart2 } from 'lucide-react';
 const initialState = { data: null, error: null };
 
 export function TallyResultsCard() {
-  const [state, formAction] = useFormState(tallyElection, initialState);
+  const [state, formAction] = useActionState(tallyElection, initialState);
 
   return (
     <Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Archive } from 'lucide-react';
 const initialState = {};
 
 export function CloseElectionCard() {
-  const [state, formAction] = useFormState(closeElection, initialState);
+  const [state, formAction] = useActionState(closeElection, initialState);
 
   return (
     <Card>
