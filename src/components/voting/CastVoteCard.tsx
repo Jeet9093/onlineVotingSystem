@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { castVote } from '@/app/actions';
+import { castVote, identifyVoterAndGetName } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
 import { Vote, Camera, Loader2, UserCheck } from 'lucide-react';
@@ -20,9 +20,10 @@ export function CastVoteCard() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const [photoDataUri, setPhotoDataUri] = useState<string>('');
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [isIdentified, setIsIdentified] = useState(false);
+  const [voterId, setVoterId] = useState<string>('');
+  const [voterName, setVoterName] = useState<string>('');
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -56,20 +57,34 @@ export function CastVoteCard() {
   const handleIdentify = async () => {
     if (!videoRef.current) return;
     setIsIdentifying(true);
+    
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const context = canvas.getContext('2d');
     context?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const dataUri = canvas.toDataURL('image/jpeg');
-    setPhotoDataUri(dataUri);
-    // This is a client-side simulation. The real identification happens on the server.
+
+    const result = await identifyVoterAndGetName(dataUri);
+
     setIsIdentifying(false);
-    setIsIdentified(true);
-    toast({
-        title: "Identity Captured!",
-        description: "Your photo has been captured. The server will identify you when you cast your vote."
-    });
+
+    if (result.error || !result.voterId || !result.voterName) {
+      toast({
+        variant: 'destructive',
+        title: 'Identification Failed',
+        description: result.error || 'Could not identify the voter.',
+      });
+      setIsIdentified(false);
+    } else {
+      setVoterId(result.voterId);
+      setVoterName(result.voterName);
+      setIsIdentified(true);
+      toast({
+          title: "Identity Verified!",
+          description: `Welcome, ${result.voterName}! You can now cast your vote.`
+      });
+    }
   };
 
   return (
@@ -96,13 +111,13 @@ export function CastVoteCard() {
               )}
               <Button onClick={handleIdentify} disabled={hasCameraPermission !== true || isIdentifying || isIdentified} className="w-full">
                 {isIdentifying ? <Loader2 className="animate-spin mr-2" /> : isIdentified ? <UserCheck className="mr-2" /> : <Camera className="mr-2" />}
-                {isIdentified ? 'Identity Captured' : isIdentifying ? 'Identifying...' : 'Identify Me'}
+                {isIdentified ? `Identified as ${voterName}` : isIdentifying ? 'Identifying...' : 'Identify Me'}
               </Button>
             </div>
           </div>
           
           <form action={formAction}>
-            <input type="hidden" name="photoDataUri" value={photoDataUri} />
+            <input type="hidden" name="voterId" value={voterId} />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="electionId">Election ID</Label>

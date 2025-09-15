@@ -11,6 +11,7 @@ import {
   getAdminUser,
   getElectionCreatorPhoto,
   getAllVoters,
+  getUser,
   TallyResult
 } from '@/lib/voting-core';
 import { verifyAdmin } from '@/ai/flows/verify-admin-flow';
@@ -89,44 +90,50 @@ export async function addVoter(prevState: FormState, formData: FormData): Promis
   }
 }
 
-async function getVoterIdFromPhoto(photoDataUri: string): Promise<string> {
-    const voters = await getAllVoters();
-    const registeredVoters = voters.map(v => ({ user_id: v.user_id, photoDataUri: v.photoDataUri! })).filter(v => v.photoDataUri);
-
-    if (registeredVoters.length === 0) {
-        throw new Error("No voters with photos registered. Cannot perform face identification.");
+export async function identifyVoterAndGetName(photoDataUri: string): Promise<{ error?: string; voterId?: string; voterName?: string; }> {
+    if (!photoDataUri) {
+        return { error: 'Photo data is missing.' };
     }
-    
-    const identification = await identifyVoter({
-        livePhotoDataUri: photoDataUri,
-        registeredVoters: registeredVoters,
-    });
+    try {
+        const voters = await getAllVoters();
+        const registeredVoters = voters.map(v => ({ user_id: v.user_id, photoDataUri: v.photoDataUri! })).filter(v => v.photoDataUri);
 
-    if (!identification.matchFound || !identification.voterId) {
-        throw new Error(`Could not identify voter: ${identification.reason}`);
+        if (registeredVoters.length === 0) {
+            throw new Error("No voters with photos registered. Cannot perform face identification.");
+        }
+        
+        const identification = await identifyVoter({
+            livePhotoDataUri: photoDataUri,
+            registeredVoters: registeredVoters,
+        });
+
+        if (!identification.matchFound || !identification.voterId) {
+            throw new Error(`Could not identify voter: ${identification.reason}`);
+        }
+        
+        const voter = await getUser(identification.voterId);
+        if (!voter) {
+            throw new Error("Identified voter not found in database.");
+        }
+
+        return { voterId: identification.voterId, voterName: voter.name };
+
+    } catch(e) {
+        return { error: (e as Error).message };
     }
-
-    return identification.voterId;
 }
 
 
 export async function castVote(prevState: FormState, formData: FormData): Promise<FormState> {
-  const photoDataUri = formData.get('photoDataUri') as string;
+  const voterId = formData.get('voterId') as string;
   const electionId = formData.get('electionId') as string;
   const candidateId = formData.get('candidateId') as string;
 
-  if (!photoDataUri) {
-    return { error: 'Face identification is required.' };
+  if (!voterId) {
+    return { error: 'Voter ID is missing. Please identify yourself first.' };
   }
   if (!electionId || !candidateId) {
     return { error: 'Election ID and Candidate ID are required.' };
-  }
-  
-  let voterId: string;
-  try {
-      voterId = await getVoterIdFromPhoto(photoDataUri);
-  } catch(e) {
-      return { error: (e as Error).message };
   }
 
   try {

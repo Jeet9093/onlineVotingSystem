@@ -228,6 +228,11 @@ export async function getAllVoters(): Promise<User[]> {
     return Object.values(store.users).filter(u => u.role === 'voter');
 }
 
+export async function getUser(userId: string): Promise<User | undefined> {
+    const store = await Store.load();
+    return store.users[userId];
+}
+
 function getCandidate(store: Store, electionId: string, candidateId: string): Candidate | undefined {
     const election = store.elections[electionId];
     if (!election) return undefined;
