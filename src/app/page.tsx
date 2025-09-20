@@ -35,8 +35,8 @@ export default async function Home() {
                   <Link href="/voter" passHref>
                       <Button variant="outline" className="w-full h-full p-6 flex flex-col items-start text-left justify-start gap-2">
                           <UserPlus className="w-8 h-8 text-primary" />
-                          <span className="font-bold text-lg">Voter Booth</span>
-                          <span className="text-sm text-muted-foreground">Register as a voter and cast your vote.</span>
+                          <span className="font-bold text-lg">Voter Hub</span>
+                          <span className="text-sm text-muted-foreground">Register as a voter or cast your vote.</span>
                           <ArrowRight className="w-4 h-4 ml-auto" />
                       </Button>
                   </Link>

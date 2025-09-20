@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, ShieldCheck, Vote, BarChart } from "lucide-react";
+import { Home, ShieldCheck, User, BarChart } from "lucide-react";
 
 const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/admin", label: "Admin", icon: ShieldCheck },
-    { href: "/voter", label: "Voter", icon: Vote },
+    { href: "/voter", label: "Voter Hub", icon: User },
     { href: "/results", label: "Results", icon: BarChart },
 ];
 
@@ -25,7 +25,7 @@ export function MainNav() {
                     </Link>
                     <nav className="flex items-center space-x-6 text-sm font-medium">
                        {navLinks.map(({ href, label, icon: Icon }) => {
-                           const isActive = pathname === href;
+                           const isActive = pathname.startsWith(href) && (href !== '/' || pathname === '/');
                            return (
                             <Link
                                 key={label}
