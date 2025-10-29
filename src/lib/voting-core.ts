@@ -152,7 +152,14 @@ class Store {
       await fs.access(DB_FILE);
       const fileContent = await fs.readFile(DB_FILE, 'utf-8');
       const data = JSON.parse(fileContent);
-      return Store.from_json(data);
+      const store = Store.from_json(data);
+       // Ensure there's an admin and they have a placeholder photo if they don't have one
+      const admin = Object.values(store.users).find(u => u.role === 'admin');
+      if (admin && !admin.photoDataUri) {
+          admin.photoDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+          await Store.save(store);
+      }
+      return store;
     } catch (error) {
       console.log("No DB file found or error reading, creating a new one.");
       const s = new Store();
