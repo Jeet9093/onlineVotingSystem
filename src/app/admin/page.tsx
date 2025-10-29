@@ -23,7 +23,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="space-y-8">
-            <ElectionsList initialElections={elections} filter="all" />
+            <ElectionsList initialElections={elections} filter="active" />
           </div>
 
         </div>

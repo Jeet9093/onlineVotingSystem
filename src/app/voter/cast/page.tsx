@@ -17,7 +17,7 @@ export default async function CastVotePage() {
             <CastVoteCard />
           </div>
           <div className="lg:col-span-2">
-            <ElectionsList initialElections={elections} filter="active" />
+            <ElectionsList initialElections={elections} filter="all" />
           </div>
         </div>
       </main>
