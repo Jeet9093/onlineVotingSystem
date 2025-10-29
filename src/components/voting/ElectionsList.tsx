@@ -8,6 +8,8 @@ type ElectionsListProps = {
 };
 
 export function ElectionsList({ initialElections }: ElectionsListProps) {
+  const activeElections = initialElections.filter(election => election.active);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -15,14 +17,14 @@ export function ElectionsList({ initialElections }: ElectionsListProps) {
         <RefreshButton />
       </CardHeader>
       <CardContent>
-        {initialElections.length > 0 ? (
+        {activeElections.length > 0 ? (
           <div className="space-y-4">
-            {initialElections.map((election) => (
+            {activeElections.map((election) => (
               <ElectionItem key={election.election_id} election={election} />
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-center py-8">No elections found. Create one to get started!</p>
+          <p className="text-muted-foreground text-center py-8">No active elections found. Create one to get started!</p>
         )}
       </CardContent>
     </Card>
