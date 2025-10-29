@@ -59,6 +59,7 @@ export async function createElection(prevState: FormState, formData: FormData): 
   }
 
   try {
+    // Pass the live photo to be stored with the election creator, but use the original for verification.
     const result = await coreCreateElection(title, candidates, admin.user_id, photoDataUri);
     revalidatePath('/');
     return {
