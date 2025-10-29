@@ -52,7 +52,7 @@ export default async function Home() {
           </Card>
           
           <div className="md:col-span-2">
-            <ElectionsList initialElections={elections} />
+            <ElectionsList initialElections={elections} filter="active" />
           </div>
 
           <VerifyChainCard />
