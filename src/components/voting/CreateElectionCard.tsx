@@ -111,7 +111,7 @@ export function CreateElectionCard() {
                 <div className="space-y-2">
                   <Label htmlFor="candidates">Candidates</Label>
                   <Input id="candidates" name="candidates" placeholder="Alice, Bob, Charlie" required />
-                  <p className="text-xs text-muted-foreground">Enter names separated by commas.</p>
+                  <p className="text-xs text-muted-foreground">Add multiple candidates by separating names with commas.</p>
                 </div>
                 <FormSubmitButton disabled={!isVerified}>Create Election</FormSubmitButton>
                 <FormStatus state={state} />
