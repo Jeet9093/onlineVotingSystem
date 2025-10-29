@@ -21,12 +21,12 @@ export function ElectionItem({ election }: { election: Election }) {
         </div>
       </div>
       <div className="space-y-2 mt-4">
-        <div className="pl-4 border-l-2 ml-2 space-y-2 pt-2">
+        <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
               <Users className="w-4 h-4" />
               Candidates:
             </h4>
-            <div className="space-y-1">
+            <div className="space-y-1 pl-4">
               {election.candidates.map((candidate) => (
                   <CopyableId key={candidate.id} label={candidate.name} id={candidate.id} />
               ))}
