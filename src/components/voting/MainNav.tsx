@@ -1,15 +1,17 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, ShieldCheck, User, BarChart } from "lucide-react";
+import { Home, ShieldCheck, User, BarChart, LogIn } from "lucide-react";
 
 const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/admin", label: "Admin", icon: ShieldCheck },
     { href: "/voter", label: "Voter Hub", icon: User },
     { href: "/results", label: "Results", icon: BarChart },
+    { href: "/login", label: "Student Login", icon: LogIn },
 ];
 
 export function MainNav() {
