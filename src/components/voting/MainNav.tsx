@@ -4,30 +4,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, ShieldCheck, User, BarChart, LogIn } from "lucide-react";
+import { Home, ShieldCheck, User, BarChart } from "lucide-react";
 
 const navLinks = [
-    { href: "/", label: "Home", icon: Home },
+    { href: "/dashboard", label: "Home", icon: Home },
     { href: "/admin", label: "Admin", icon: ShieldCheck },
     { href: "/voter", label: "Voter Hub", icon: User },
     { href: "/results", label: "Results", icon: BarChart },
-    { href: "/login", label: "Login", icon: LogIn },
 ];
 
 export function MainNav() {
     const pathname = usePathname();
+
+    // Don't show nav on the root login page
+    if (pathname === '/') {
+        return null;
+    }
+
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center">
                 <div className="mr-4 hidden md:flex">
-                    <Link href="/" className="mr-6 flex items-center space-x-2">
+                    <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
                         <span className="hidden font-bold sm:inline-block font-headline text-primary">
                            Virtual Polling
                         </span>
                     </Link>
                     <nav className="flex items-center space-x-6 text-sm font-medium">
                        {navLinks.map(({ href, label, icon: Icon }) => {
-                           const isActive = pathname.startsWith(href) && (href !== '/' || pathname === '/');
+                           const isActive = pathname.startsWith(href);
                            return (
                             <Link
                                 key={label}
