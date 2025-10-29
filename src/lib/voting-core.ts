@@ -185,14 +185,11 @@ class Store {
 
 // --- Core Functions ---
 
-export async function createElection(title: string, candidateNames: string[], creatorId: string, creatorPhotoDataUri: string): Promise<Election> {
+export async function createElection(title: string, candidateNames: string[], creatorId: string): Promise<Election> {
   const store = await Store.load();
   if(!store.users[creatorId] || store.users[creatorId].role !== 'admin') {
     throw new Error("Creator must be an admin.");
   }
-
-  // Update the admin's reference photo with the one just taken.
-  store.users[creatorId].photoDataUri = creatorPhotoDataUri;
 
   const eid = crypto.randomUUID();
   const candidates = candidateNames.map(name => ({ id: crypto.randomUUID(), name }));
@@ -240,6 +237,17 @@ export async function getUser(userId: string): Promise<User | undefined> {
     return store.users[userId];
 }
 
+export async function updateUserPhoto(userId: string, photoDataUri: string): Promise<void> {
+    const store = await Store.load();
+    if (store.users[userId]) {
+        store.users[userId].photoDataUri = photoDataUri;
+        await Store.save(store);
+    } else {
+        throw new Error("User not found to update photo.");
+    }
+}
+
+
 function getCandidate(store: Store, electionId: string, candidateId: string): Candidate | undefined {
     const election = store.elections[electionId];
     if (!election) return undefined;
@@ -255,14 +263,17 @@ export async function getAdminUser(): Promise<User> {
     return admin;
 }
 
-export async function getElectionCreatorPhoto(electionId: string): Promise<string | undefined> {
+export async function getElectionCreatorPhoto(electionId: string): Promise<{ creatorId: string; photoDataUri: string | undefined } | undefined> {
     const store = await Store.load();
     const election = store.elections[electionId];
     if (!election) {
         throw new Error("Election not found");
     }
     const creator = store.users[election.creatorId];
-    return creator?.photoDataUri;
+    if (!creator) {
+        return undefined;
+    }
+    return { creatorId: election.creatorId, photoDataUri: creator.photoDataUri };
 }
 
 

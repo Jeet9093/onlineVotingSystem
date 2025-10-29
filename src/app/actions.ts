@@ -12,6 +12,7 @@ import {
   getElectionCreatorPhoto,
   getAllVoters,
   getUser,
+  updateUserPhoto as coreUpdateUserPhoto,
   TallyResult
 } from '@/lib/voting-core';
 import { verifyAdmin } from '@/ai/flows/verify-admin-flow';
@@ -52,15 +53,17 @@ export async function createElection(prevState: FormState, formData: FormData): 
     return { error: `Face verification failed: ${(e as Error).message}` };
   }
 
-
   const candidates = candidatesStr.split(',').map(s => s.trim()).filter(Boolean);
   if (candidates.length < 2) {
     return { error: 'Please provide at least two candidates.' };
   }
 
   try {
-    // Pass the live photo to be stored with the election creator, but use the original for verification.
-    const result = await coreCreateElection(title, candidates, admin.user_id, photoDataUri);
+    // Verification passed, now update the admin's photo to the newly verified one
+    await coreUpdateUserPhoto(admin.user_id, photoDataUri);
+    
+    // Pass the admin's ID to be stored with the election
+    const result = await coreCreateElection(title, candidates, admin.user_id);
     revalidatePath('/');
     return {
       message: `Election Created:\nTitle: ${result.title}\nID: ${result.election_id}\n\nCandidates:\n${result.candidates.map(c => `- ${c.name}: ${c.id}`).join('\n')}`
@@ -160,14 +163,14 @@ export async function closeElection(prevState: FormState, formData: FormData): P
     return { error: 'Face verification is required.' };
   }
   
-  const referencePhotoDataUri = await getElectionCreatorPhoto(electionId);
-  if (!referencePhotoDataUri) {
+  const creatorInfo = await getElectionCreatorPhoto(electionId);
+  if (!creatorInfo || !creatorInfo.photoDataUri) {
       return { error: 'Could not find the reference photo for the election creator.' };
   }
 
   try {
     const verification = await verifyAdmin({
-      referencePhotoDataUri,
+      referencePhotoDataUri: creatorInfo.photoDataUri,
       livePhotoDataUri: photoDataUri,
     });
     if (!verification.isAuthorized) {
@@ -179,6 +182,8 @@ export async function closeElection(prevState: FormState, formData: FormData): P
 
 
   try {
+    // Verification passed, let's update the creator's photo for future verifications
+    await coreUpdateUserPhoto(creatorInfo.creatorId, photoDataUri);
     const result = await coreCloseElection(electionId);
     revalidatePath('/');
     return { message: `Election ${result.election_id} has been closed.` };
