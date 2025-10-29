@@ -37,17 +37,17 @@ export async function createElection(prevState: FormState, formData: FormData): 
   }
 
   const admin = await getAdminUser();
-  if (!admin.photoDataUri) {
-      return { error: 'Admin user does not have a reference photo. Cannot verify.' };
-  }
+  const isFirstTime = admin.photoDataUri?.startsWith('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
 
   try {
-    const verification = await verifyAdmin({
-      referencePhotoDataUri: admin.photoDataUri,
-      livePhotoDataUri: photoDataUri,
-    });
-    if (!verification.isAuthorized) {
-        return { error: `Face verification failed: ${verification.reason}` };
+    if (!isFirstTime) {
+        const verification = await verifyAdmin({
+            referencePhotoDataUri: admin.photoDataUri!,
+            livePhotoDataUri: photoDataUri,
+        });
+        if (!verification.isAuthorized) {
+            return { error: `Face verification failed: ${verification.reason}` };
+        }
     }
   } catch(e) {
     return { error: `Face verification failed: ${(e as Error).message}` };
@@ -59,7 +59,8 @@ export async function createElection(prevState: FormState, formData: FormData): 
   }
 
   try {
-    // Verification passed, now update the admin's photo to the newly verified one
+    // On first time, verification is implicitly passed and we update the photo.
+    // On subsequent times, we update it to keep it fresh.
     await coreUpdateUserPhoto(admin.user_id, photoDataUri);
     
     // Pass the admin's ID to be stored with the election
@@ -158,35 +159,34 @@ export async function closeElection(prevState: FormState, formData: FormData): P
   if (!electionId) {
     return { error: 'Election ID is required.' };
   }
-
   if (!photoDataUri) {
     return { error: 'Face verification is required.' };
   }
   
-  const creatorInfo = await getElectionCreatorPhoto(electionId);
-  if (!creatorInfo || !creatorInfo.photoDataUri) {
-      return { error: 'Could not find the reference photo for the election creator.' };
-  }
-
   try {
-    const verification = await verifyAdmin({
-      referencePhotoDataUri: creatorInfo.photoDataUri,
-      livePhotoDataUri: photoDataUri,
-    });
-    if (!verification.isAuthorized) {
-        return { error: `Face verification failed: ${verification.reason}` };
+    const creatorInfo = await getElectionCreatorPhoto(electionId);
+    if (!creatorInfo || !creatorInfo.photoDataUri) {
+        return { error: 'Could not find the reference photo for the election creator.' };
     }
-  } catch(e) {
-    return { error: `Face verification failed: ${(e as Error).message}` };
-  }
 
+    const isFirstTime = creatorInfo.photoDataUri?.startsWith('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
 
-  try {
-    // Verification passed, let's update the creator's photo for future verifications
+    if (!isFirstTime) {
+      const verification = await verifyAdmin({
+        referencePhotoDataUri: creatorInfo.photoDataUri,
+        livePhotoDataUri: photoDataUri,
+      });
+      if (!verification.isAuthorized) {
+          return { error: `Face verification failed: ${verification.reason}` };
+      }
+    }
+    
+    // Verification passed (or was skipped for a first-time user), let's update the creator's photo
     await coreUpdateUserPhoto(creatorInfo.creatorId, photoDataUri);
     const result = await coreCloseElection(electionId);
     revalidatePath('/');
     return { message: `Election ${result.election_id} has been closed.` };
+
   } catch (e) {
     return { error: (e as Error).message };
   }
