@@ -8,7 +8,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { castVote, identifyVoterAndGetName } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
-import { Vote, Camera, Loader2, UserCheck } from 'lucide-react';
+import { Vote, Camera, Loader2, UserCheck, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '../ui/button';
 
@@ -17,6 +17,7 @@ const initialState = {};
 export function CastVoteCard() {
   const [state, formAction] = useActionState(castVote, initialState);
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -24,6 +25,25 @@ export function CastVoteCard() {
   const [isIdentified, setIsIdentified] = useState(false);
   const [voterId, setVoterId] = useState<string>('');
   const [voterName, setVoterName] = useState<string>('');
+
+  const resetState = () => {
+    setIsIdentified(false);
+    setVoterId('');
+    setVoterName('');
+    formRef.current?.reset();
+  };
+  
+  useEffect(() => {
+    // This effect runs when a vote is successfully cast
+    if (state.message) {
+      toast({
+        title: 'Vote Cast!',
+        description: 'The voting booth has been reset for the next voter.',
+      });
+      resetState();
+    }
+  }, [state.message, toast]);
+
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -90,9 +110,15 @@ export function CastVoteCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline flex items-center gap-2">
-          <Vote className="w-6 h-6 text-primary" />
-          Cast Vote
+        <CardTitle className="font-headline flex items-center justify-between">
+            <div className='flex items-center gap-2'>
+                <Vote className="w-6 h-6 text-primary" />
+                Cast Vote
+            </div>
+            <Button variant="ghost" size="icon" onClick={resetState} className="h-8 w-8">
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                <span className="sr-only">Reset</span>
+            </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -116,7 +142,7 @@ export function CastVoteCard() {
             </div>
           </div>
           
-          <form action={formAction}>
+          <form action={formAction} ref={formRef}>
             <input type="hidden" name="voterId" value={voterId} />
             <div className="space-y-4">
               <div className="space-y-2">
