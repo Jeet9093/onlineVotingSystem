@@ -8,7 +8,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { addVoter } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
-import { UserPlus, Camera, Loader2, UserCheck } from 'lucide-react';
+import { UserPlus, Camera, Loader2, UserCheck, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '../ui/button';
 
@@ -17,6 +17,7 @@ const initialState = {};
 export function AddVoterCard() {
   const [state, formAction] = useActionState(addVoter, initialState);
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -24,6 +25,24 @@ export function AddVoterCard() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCaptured, setIsCaptured] = useState(false);
   
+  const resetState = () => {
+    setIsCaptured(false);
+    setPhotoDataUri('');
+    formRef.current?.reset();
+    // Also reset the action state if possible, though useActionState doesn't provide a direct reset.
+    // A simple way is to manage our own display state.
+  };
+
+  useEffect(() => {
+    if (state.message) {
+      toast({
+        title: 'Voter Added!',
+        description: 'Registration form has been reset.',
+      });
+      resetState();
+    }
+  }, [state.message, toast]);
+
   useEffect(() => {
     const getCameraPermission = async () => {
       try {
@@ -77,13 +96,19 @@ export function AddVoterCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline flex items-center gap-2">
-          <UserPlus className="w-6 h-6 text-primary" />
-          Add Voter
+        <CardTitle className="font-headline flex items-center justify-between">
+            <div className='flex items-center gap-2'>
+                <UserPlus className="w-6 h-6 text-primary" />
+                Add Voter
+            </div>
+            <Button variant="ghost" size="icon" onClick={resetState} className="h-8 w-8">
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                <span className="sr-only">Reset</span>
+            </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} ref={formRef} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Voter Name</Label>
             <Input id="name" name="name" placeholder="e.g., John Doe" required />
@@ -103,7 +128,7 @@ export function AddVoterCard() {
                 )}
                  <Button type="button" onClick={handleCapture} disabled={hasCameraPermission !== true || isCapturing || isCaptured} className="w-full">
                     {isCapturing ? <Loader2 className="animate-spin mr-2" /> : isCaptured ? <UserCheck className="mr-2" /> : <Camera className="mr-2" />}
-                    {isCaptured ? 'Captured' : isCapturing ? 'Capturing...' : 'Capture Photo'}
+                    {isCaptured ? 'Photo Captured' : isCapturing ? 'Capturing...' : 'Capture Photo'}
                 </Button>
             </div>
           </div>
