@@ -19,9 +19,11 @@ export function ElectionItem({ election }: { election: Election }) {
               <Users className="w-4 h-4" />
               Candidates:
             </h4>
-            {election.candidates.map((candidate) => (
-                <CopyableId key={candidate.id} label={candidate.name} id={candidate.id} />
-            ))}
+            <div className="space-y-1">
+              {election.candidates.map((candidate) => (
+                  <CopyableId key={candidate.id} label={candidate.name} id={candidate.id} />
+              ))}
+            </div>
         </div>
       </div>
     </div>
