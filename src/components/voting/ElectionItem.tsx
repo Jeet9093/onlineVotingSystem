@@ -1,3 +1,4 @@
+
 import type { Election } from '@/lib/voting-core';
 import { Badge } from '@/components/ui/badge';
 import { CopyableId } from './CopyableId';
