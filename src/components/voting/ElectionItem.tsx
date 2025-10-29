@@ -1,6 +1,7 @@
 import type { Election } from '@/lib/voting-core';
 import { Badge } from '@/components/ui/badge';
 import { CopyableId } from './CopyableId';
+import { Users } from 'lucide-react';
 
 export function ElectionItem({ election }: { election: Election }) {
   return (
@@ -14,7 +15,10 @@ export function ElectionItem({ election }: { election: Election }) {
       <div className="space-y-2">
         <CopyableId label="Election ID" id={election.election_id} />
         <div className="pl-4 border-l-2 ml-2 space-y-2 mt-2 pt-2">
-            <h4 className="text-sm font-medium text-muted-foreground">Candidates:</h4>
+            <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+              <Users className="w-4 h-4" />
+              Candidates:
+            </h4>
             {election.candidates.map((candidate) => (
                 <CopyableId key={candidate.id} label={candidate.name} id={candidate.id} />
             ))}
