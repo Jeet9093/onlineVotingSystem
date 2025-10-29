@@ -58,9 +58,9 @@ export function StudentLoginCard() {
     if (otp === '123456') {
       toast({
         title: 'Login Successful!',
-        description: 'Redirecting to your dashboard...',
+        description: 'Redirecting to the homepage...',
       });
-      router.push('/student');
+      router.push('/');
     } else {
       setError('Invalid OTP. Please try again.');
     }
