@@ -219,6 +219,17 @@ export async function closeElection(electionId: string): Promise<{ election_id: 
   return { election_id: electionId, active: false };
 }
 
+export async function deleteElection(electionId: string): Promise<{ election_id: string; }> {
+  const store = await Store.load();
+  if (!store.elections[electionId]) {
+    throw new Error('No such election');
+  }
+  delete store.elections[electionId];
+  await Store.save(store);
+  return { election_id: electionId };
+}
+
+
 export async function addVoter(name: string, photoDataUri: string): Promise<{ voter_id: string; name: string }> {
   const store = await Store.load();
   const vid = crypto.randomUUID();

@@ -6,6 +6,7 @@ import {
   addVoter as coreAddVoter,
   castVote as coreCastVote,
   closeElection as coreCloseElection,
+  deleteElection as coreDeleteElection,
   tally as coreTally,
   verifyChain as coreVerifyChain,
   getAdminUser,
@@ -186,6 +187,40 @@ export async function closeElection(prevState: FormState, formData: FormData): P
     const result = await coreCloseElection(electionId);
     revalidatePath('/');
     return { message: `Election ${result.election_id} has been closed.` };
+
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function deleteElection(prevState: FormState, formData: FormData): Promise<FormState> {
+  const electionId = formData.get('electionId') as string;
+  const photoDataUri = formData.get('photoDataUri') as string;
+
+  if (!electionId) {
+    return { error: 'Election ID is required.' };
+  }
+  if (!photoDataUri) {
+    return { error: 'Face verification is required.' };
+  }
+  
+  try {
+    const creatorInfo = await getElectionCreatorPhoto(electionId);
+    if (!creatorInfo || !creatorInfo.photoDataUri) {
+        return { error: 'Could not find the reference photo for the election creator.' };
+    }
+
+    const verification = await verifyAdmin({
+      referencePhotoDataUri: creatorInfo.photoDataUri,
+      livePhotoDataUri: photoDataUri,
+    });
+    if (!verification.isAuthorized) {
+        return { error: `Face verification failed: ${verification.reason}` };
+    }
+    
+    const result = await coreDeleteElection(electionId);
+    revalidatePath('/');
+    return { message: `Election ${result.election_id} has been deleted.` };
 
   } catch (e) {
     return { error: (e as Error).message };
