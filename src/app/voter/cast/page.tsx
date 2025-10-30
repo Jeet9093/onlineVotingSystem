@@ -1,3 +1,4 @@
+
 import { CastVoteCard } from '@/components/voting/CastVoteCard';
 import { ElectionsList } from '@/components/voting/ElectionsList';
 import { listElections } from '@/lib/voting-core';
@@ -17,7 +18,7 @@ export default async function CastVotePage() {
             <CastVoteCard />
           </div>
           <div className="lg:col-span-2">
-            <ElectionsList initialElections={elections} filter="all" />
+            <ElectionsList initialElections={elections} filter="active" />
           </div>
         </div>
       </main>
