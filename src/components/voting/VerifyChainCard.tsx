@@ -7,7 +7,12 @@ import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
 import { ShieldCheck } from 'lucide-react';
 
-const initialState = {};
+type FormState = {
+  message?: string;
+  error?: string;
+};
+
+const initialState: FormState = {};
 
 export function VerifyChainCard() {
   const [state, formAction] = useActionState(verifyChain, initialState);

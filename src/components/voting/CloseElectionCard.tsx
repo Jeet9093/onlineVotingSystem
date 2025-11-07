@@ -12,7 +12,12 @@ import { Archive, Camera, Loader2, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '../ui/button';
 
-const initialState = {};
+type FormState = {
+  message?: string;
+  error?: string;
+};
+
+const initialState: FormState = {};
 
 export function CloseElectionCard() {
   const [state, formAction] = useActionState(closeElection, initialState);

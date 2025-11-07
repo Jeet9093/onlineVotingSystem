@@ -20,7 +20,12 @@ import { FormStatus } from './FormStatus';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
-const initialState = {};
+type FormState = {
+  message?: string;
+  error?: string;
+};
+
+const initialState: FormState = {};
 
 export function DeleteElectionButton({ electionId }: { electionId: string }) {
   const [state, formAction] = useActionState(deleteElection, initialState);
