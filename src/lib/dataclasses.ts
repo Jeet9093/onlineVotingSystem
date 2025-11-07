@@ -12,7 +12,7 @@ export function dataclass<T extends object>() {
     }
 
     toObject(): T {
-      return { ...this } as T;
+      return { ...this } as unknown as T;
     }
   };
 }
