@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useActionState } from 'react';
@@ -48,7 +49,7 @@ export function TallyResultsCard() {
             <h3 className="font-semibold text-lg">{state.data.title}</h3>
             <p className="text-sm text-muted-foreground">Total Votes: {state.data.total}</p>
             <div className="space-y-3">
-              {state.data.results.map((result) => {
+              {state.data.results.map((result: { candidate_id: string; name: string; votes: number }) => {
                 const percentage = state.data.total > 0 ? (result.votes / state.data.total) * 100 : 0;
                 return (
                   <div key={result.candidate_id}>
