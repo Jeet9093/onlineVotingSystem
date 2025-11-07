@@ -9,8 +9,15 @@ import { tallyElection } from '@/app/actions';
 import { FormSubmitButton } from './FormSubmitButton';
 import { FormStatus } from './FormStatus';
 import { BarChart2 } from 'lucide-react';
+import type { TallyResult } from '@/lib/voting-core';
 
-const initialState = { data: null, error: null };
+type FormState = {
+  message?: string;
+  error?: string;
+  data?: TallyResult;
+};
+
+const initialState: FormState = { data: undefined, error: undefined, message: undefined };
 
 export function TallyResultsCard() {
   const [state, formAction] = useActionState(tallyElection, initialState);
